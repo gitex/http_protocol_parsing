@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <assert.h>
 #include "ptr_vector.h"
 
 PtrVector *ptr_vector_new(int capacity) {
@@ -37,13 +38,13 @@ static void ptr_vector_expand(PtrVector *vec) {
     vec->elements = realloc(vec->elements, vec->capacity * sizeof(void *));
 }
 
-static void ptr_vector_shrink(PtrVector *vec) {
+__attribute__((unused)) static void ptr_vector_shrink(PtrVector *vec) {
     vec->capacity /= CAPACITY_FACTOR;
     vec->elements = realloc(vec->elements, vec->capacity * sizeof(void *));
 }
 
-void ptr_vector_set(PtrVector *vec, int index, void *element, size_t element_size) {
-    if (index < 0 || index >= vec->length) {
+void ptr_vector_set(PtrVector *vec, size_t index, void *element, size_t element_size) {
+    if (index >= vec->length) {
         return;
     }
 
@@ -53,20 +54,22 @@ void ptr_vector_set(PtrVector *vec, int index, void *element, size_t element_siz
     vec->elements[index] = copy;
 }
 
-void ptr_vector_insert(PtrVector *vec, int index, void *element, size_t element_size) {
-    if (index < 0 || index > vec->length) return;
+void ptr_vector_insert(PtrVector *vec, size_t index, void *element, size_t element_size) {
     if (ptr_vector_is_full(vec)) {
         ptr_vector_expand(vec);
     }
+    if (index > vec->length) return;
 
-    for (int i = vec->length; i > index; --i) {
+    for (size_t i = vec->length; i > index; --i) {
         vec->elements[i] = vec->elements[i - 1];
     }
 
-    free(vec->elements[index]);
+    // free(vec->elements[index]);
     void *copy = malloc(element_size);
+    assert(copy != NULL);
     memcpy(copy, element, element_size);
     vec->elements[index] = copy;
+    vec->length++;
 }
 
 // Push element at the end
@@ -75,12 +78,14 @@ void ptr_vector_push(PtrVector *vec, void *element, size_t element_size) {
         ptr_vector_expand(vec);
     }
 
-    ptr_vector_insert(vec, vec->length, element, element_size);
+    void *copy = malloc(element_size);
+    memcpy(copy, element, element_size);
+    vec->elements[vec->length] = copy;
     vec->length++;
 }
 
-void *ptr_vector_at(PtrVector *vec, int index) {
-    if (index < 0 || index >= vec->length) {
+void *ptr_vector_at(PtrVector *vec, size_t index) {
+    if (index >= vec->length) {
         return NULL;
     }
 

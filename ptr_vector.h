@@ -27,16 +27,16 @@ size_t ptr_vector_capacity(PtrVector *vec);
 bool ptr_vector_is_empty(PtrVector *vec);
 
 /* Set element in the position instead of previous element */
-void ptr_vector_set(PtrVector *vec, int index, void *element, size_t element_size);
+void ptr_vector_set(PtrVector *vec, size_t index, void *element, size_t element_size);
 
 /* Split vector at index and insert element in between */
-void ptr_vector_insert(PtrVector *vec, int index, void *element, size_t element_size);
+void ptr_vector_insert(PtrVector *vec, size_t index, void *element, size_t element_size);
 
 /* Push element in the end of vector */
 void ptr_vector_push(PtrVector *vec, void *element, size_t element_size);
 
 /* Get element at index */
-void *ptr_vector_at(PtrVector *vec, int index);
+void *ptr_vector_at(PtrVector *vec, size_t index);
 
 /* Free vector */
 void ptr_vector_free(PtrVector *vec);
