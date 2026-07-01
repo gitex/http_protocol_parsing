@@ -130,7 +130,7 @@ int main(void) {
 
                 curr_header->value = calloc(end - start + 1, sizeof(char));
                 write_until_ptr(curr_header->value, start, end);
-                ptr_vector_push(headers, curr_header, sizeof(HTTPHeader));
+                ptr_vector_push_back(headers, curr_header, sizeof(HTTPHeader));
 
                 start = end + CRLF_LENGTH;
                 state = STATE_HEADER_KEY;

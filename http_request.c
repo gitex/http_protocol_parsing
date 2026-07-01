@@ -15,7 +15,7 @@ void http_request_add_header(HTTPRequest *req, HTTPHeader *header) {
         req->headers = ptr_vector_new(INITIAL_HEADERS_SIZE);
     }
 
-    ptr_vector_push(req->headers, header, sizeof(HTTPHeader));
+    ptr_vector_push_back(req->headers, header, sizeof(HTTPHeader));
 }
 
 void http_request_free(HTTPRequest *req) {

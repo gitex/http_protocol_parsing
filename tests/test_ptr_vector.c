@@ -34,7 +34,7 @@ static void test_push() {
     size_t expected = 20;
 
     for (size_t i = 0; i < expected; i++) {
-        ptr_vector_push(vec, &i, sizeof(int));
+        ptr_vector_push_back(vec, &i, sizeof(int));
     }
     ASSERT_EQ_SIZE(expected, ptr_vector_length(vec));
     ASSERT_EQ_SIZE(expected, vec->length);
@@ -79,7 +79,7 @@ static void test_is_empty() {
     ASSERT_TRUE(ptr_vector_is_empty(vec));
 
     char *tmp = "test";
-    ptr_vector_push(vec, tmp, strlen(tmp));
+    ptr_vector_push_back(vec, tmp, strlen(tmp));
     ASSERT_FALSE(ptr_vector_is_empty(vec));
 }
 

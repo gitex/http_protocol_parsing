@@ -43,17 +43,7 @@ __attribute__((unused)) static void ptr_vector_shrink(PtrVector *vec) {
     vec->elements = realloc(vec->elements, vec->capacity * sizeof(void *));
 }
 
-void ptr_vector_set(PtrVector *vec, size_t index, void *element, size_t element_size) {
-    if (index >= vec->length) {
-        return;
-    }
-
-    free(vec->elements[index]);
-    void *copy = malloc(element_size);
-    memcpy(copy, element, element_size);
-    vec->elements[index] = copy;
-}
-
+// Expands vector at the index and inserts an element there
 void ptr_vector_insert(PtrVector *vec, size_t index, void *element, size_t element_size) {
     if (ptr_vector_is_full(vec)) {
         ptr_vector_expand(vec);
@@ -73,7 +63,7 @@ void ptr_vector_insert(PtrVector *vec, size_t index, void *element, size_t eleme
 }
 
 // Push element at the end
-void ptr_vector_push(PtrVector *vec, void *element, size_t element_size) {
+void ptr_vector_push_back(PtrVector *vec, void *element, size_t element_size) {
     if (ptr_vector_is_full(vec)) {
         ptr_vector_expand(vec);
     }
@@ -83,6 +73,7 @@ void ptr_vector_push(PtrVector *vec, void *element, size_t element_size) {
     vec->elements[vec->length] = copy;
     vec->length++;
 }
+
 
 void *ptr_vector_at(PtrVector *vec, size_t index) {
     if (index >= vec->length) {
