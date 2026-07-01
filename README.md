@@ -4,7 +4,7 @@
 
 - Check State Machine design
 - Make vector myself
-- Make test runner myself and add a little bit pretty output to it
+- Make test runner myself and add pretty output to it (at least something!)
 - Check HTTP protocol (it's kinda old, but principles still interesting)
 
 ## Build
