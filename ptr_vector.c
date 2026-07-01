@@ -96,6 +96,13 @@ void *ptr_vector_at(PtrVector *vec, size_t index) {
 }
 
 void ptr_vector_free(PtrVector *vec) {
-    free(vec->elements);
+    if (!vec) return;
+
+    if (vec->elements != NULL) {
+        for (size_t i = 0; i < vec->length; i++) {
+            free(vec->elements[i]);
+        }
+        free(vec->elements);
+    }
     free(vec);
 }

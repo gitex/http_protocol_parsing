@@ -22,13 +22,7 @@ void http_request_free(HTTPRequest *req) {
     if (!req) return;
 
     if (req->headers != NULL && req->headers->elements != NULL) {
-        for (size_t i = 0; i < req->headers->length; i++) {
-            free(req->headers->elements[i]);
-        }
-
-        free(req->headers->elements);
-        free(req->headers);
-
+        ptr_vector_free(req->headers);
     }
 
     free(req);
