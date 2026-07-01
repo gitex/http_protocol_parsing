@@ -11,9 +11,13 @@ PtrVector *ptr_vector_new(int capacity) {
     }
 
     PtrVector *v = malloc(sizeof(PtrVector));
+    if (!v) return NULL;
+
     v->capacity = capacity;
     v->length = 0;
     v->elements = malloc(v->capacity * sizeof(void *));
+    if (!v->elements) { free(v); return NULL; }
+
     return v;
 }
 
@@ -33,14 +37,22 @@ static bool ptr_vector_is_full(PtrVector *vec) {
     return vec->length == vec->capacity;
 }
 
+static int realloc_with_capacity(PtrVector *vec, size_t capacity) {
+    void *tmp = realloc(vec->elements, vec->capacity * sizeof(void *));
+    if (!tmp) {
+        fprintf(stderr, "Cannot expand ptr_vector\n");
+        return 1;
+    }
+    vec->elements = tmp;
+    return 0;
+}
+
 static void ptr_vector_expand(PtrVector *vec) {
-    vec->capacity *= CAPACITY_FACTOR;
-    vec->elements = realloc(vec->elements, vec->capacity * sizeof(void *));
+    realloc_with_capacity(vec, vec->capacity * CAPACITY_FACTOR);
 }
 
 __attribute__((unused)) static void ptr_vector_shrink(PtrVector *vec) {
-    vec->capacity /= CAPACITY_FACTOR;
-    vec->elements = realloc(vec->elements, vec->capacity * sizeof(void *));
+    realloc_with_capacity(vec, vec->capacity /=CAPACITY_FACTOR);
 }
 
 // Expands vector at the index and inserts an element there
@@ -54,9 +66,8 @@ void ptr_vector_insert(PtrVector *vec, size_t index, void *element, size_t eleme
         vec->elements[i] = vec->elements[i - 1];
     }
 
-    // free(vec->elements[index]);
     void *copy = malloc(element_size);
-    assert(copy != NULL);
+    if (!copy) return;
     memcpy(copy, element, element_size);
     vec->elements[index] = copy;
     vec->length++;
@@ -69,6 +80,7 @@ void ptr_vector_push_back(PtrVector *vec, void *element, size_t element_size) {
     }
 
     void *copy = malloc(element_size);
+    if (!copy) return;
     memcpy(copy, element, element_size);
     vec->elements[vec->length] = copy;
     vec->length++;
