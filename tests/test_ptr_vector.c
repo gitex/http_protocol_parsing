@@ -3,7 +3,7 @@
 #include "utils.h"
 
 
-void test_init_with_zero_capacity() {
+static void test_init_with_zero_capacity() {
     PtrVector *vec = ptr_vector_new(0);
     ASSERT_NOT_NULL(vec);
     ASSERT_EQ_SIZE((size_t) DEFAULT_CAPACITY, vec->capacity);
@@ -11,7 +11,7 @@ void test_init_with_zero_capacity() {
     ptr_vector_free(vec);
 }
 
-void test_init_with_some_capacity() {
+static void test_init_with_some_capacity() {
     PtrVector *vec = ptr_vector_new(4);
     ASSERT_NOT_NULL(vec);
     ASSERT_EQ_SIZE((size_t) 4, vec->capacity);
@@ -19,17 +19,17 @@ void test_init_with_some_capacity() {
     ptr_vector_free(vec);
 }
 
-void test_length() {
+static void test_length() {
     PtrVector *vec = ptr_vector_new(0);
     ASSERT_EQ_SIZE((size_t) 0, ptr_vector_length(vec));
 }
 
-void test_capacity() {
+static void test_capacity() {
     PtrVector *vec = ptr_vector_new(4);
     ASSERT_EQ_SIZE((size_t) 4, ptr_vector_capacity(vec));
 }
 
-void test_push() {
+static void test_push() {
     PtrVector *vec = ptr_vector_new(4);
     size_t expected = 20;
 
@@ -40,7 +40,7 @@ void test_push() {
     ASSERT_EQ_SIZE(expected, vec->length);
 }
 
-void test_insert_at_the_end() {
+static void test_insert_at_the_end() {
     PtrVector *vec = ptr_vector_new(2);
     size_t expected = 5;
 
@@ -55,7 +55,8 @@ void test_insert_at_the_end() {
     ASSERT_EQ_INT(3, *(int*)ptr_vector_at(vec, 3));
     ASSERT_EQ_INT(4, *(int*)ptr_vector_at(vec, 4));
 }
-void test_insert_in_the_middle() {
+
+static void test_insert_in_the_middle() {
     PtrVector *vec = ptr_vector_new(2);
 
     for (size_t i = 0; i < 5; i++) {
@@ -73,8 +74,7 @@ void test_insert_in_the_middle() {
     ASSERT_EQ_INT(4, *(int*)ptr_vector_at(vec, 5));
 }
 
-
-void test_is_empty() {
+static void test_is_empty() {
     PtrVector *vec = ptr_vector_new(4);
     ASSERT_TRUE(ptr_vector_is_empty(vec));
 
