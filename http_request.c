@@ -18,15 +18,11 @@ void http_request_add_header(HTTPRequest *req, HTTPHeader *header) {
     ptr_vector_push(req->headers, header, sizeof(HTTPHeader));
 }
 
-HTTPHeader *http_request_get_header(HTTPRequest *req, int index) {
-    return ptr_vector_at(req->headers, index);
-}
-
 void http_request_free(HTTPRequest *req) {
     if (!req) return;
 
     if (req->headers != NULL && req->headers->elements != NULL) {
-        for (int i = 0; i < req->headers->length; i++) {
+        for (size_t i = 0; i < req->headers->length; i++) {
             free(req->headers->elements[i]);
         }
 

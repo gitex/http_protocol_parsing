@@ -96,10 +96,6 @@ int main(void) {
                 break;
 
             case STATE_HEADER_KEY:
-                // if (curr_header) {
-                //     http_header_reset(curr_header);
-                // }
-
                 end = next_char_pos(start, ':');
                 if (!end) {
                     // error_msg = "Cannot find symbol ':'";
