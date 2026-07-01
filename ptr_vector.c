@@ -3,9 +3,18 @@
 #include <stdbool.h>
 #include <string.h>
 #include <assert.h>
+
 #include "ptr_vector.h"
 
-PtrVector *ptr_vector_new(int capacity) {
+
+typedef struct PtrVector {
+    void **elements;
+    size_t length;
+    size_t capacity;
+} PtrVector;
+
+
+PtrVector *ptr_vec_new(int capacity) {
     if (capacity <= 0) {
         capacity = DEFAULT_CAPACITY;
     }
@@ -21,44 +30,61 @@ PtrVector *ptr_vector_new(int capacity) {
     return v;
 }
 
-size_t ptr_vector_length(PtrVector *vec) {
+size_t ptr_vec_length(PtrVector *vec) {
     return vec->length;
 }
 
-size_t ptr_vector_capacity(PtrVector *vec) {
+size_t ptr_vec_capacity(PtrVector *vec) {
     return vec->capacity;
 }
 
-bool ptr_vector_is_empty(PtrVector *vec) {
+bool ptr_vec_is_empty(PtrVector *vec) {
     return vec->length == 0;
 }
 
-static bool ptr_vector_is_full(PtrVector *vec) {
+// Only for internal use??? Does it help with something outside?
+static bool ptr_vec_is_full(PtrVector *vec) {
     return vec->length == vec->capacity;
 }
 
+// Next 3 functions reallocate vector with capacity. Do we need this control outside?
+// What if outside we decide to shrink, but there values in other side???
+// Maybe it's enough to create vector with capacity?
 static int realloc_with_capacity(PtrVector *vec, size_t capacity) {
-    void *tmp = realloc(vec->elements, vec->capacity * sizeof(void *));
+    void *tmp = realloc(vec->elements, capacity);
     if (!tmp) {
-        fprintf(stderr, "Cannot expand ptr_vector\n");
+        fprintf(stderr, "Cannot expand ptr_vec\n");
         return 1;
     }
     vec->elements = tmp;
     return 0;
 }
 
-static void ptr_vector_expand(PtrVector *vec) {
+static void ptr_vec_expand(PtrVector *vec) {
     realloc_with_capacity(vec, vec->capacity * CAPACITY_FACTOR);
 }
 
-__attribute__((unused)) static void ptr_vector_shrink(PtrVector *vec) {
+__attribute__((unused)) static void ptr_vec_shrink(PtrVector *vec) {
     realloc_with_capacity(vec, vec->capacity /=CAPACITY_FACTOR);
 }
 
-// Expands vector at the index and inserts an element there
-void ptr_vector_insert(PtrVector *vec, size_t index, void *element, size_t element_size) {
-    if (ptr_vector_is_full(vec)) {
-        ptr_vector_expand(vec);
+void ptr_vec_set(PtrVector *vec, size_t index, void *elem) {
+    if (!vec || !elem || index >= vec->capacity) return;
+
+    vec->elements[index] = elem;
+
+    if (index > vec->length) {
+        vec->length = index;
+    } else if (index == vec->length) {
+        vec->length++;
+    }
+}
+
+void ptr_vec_insert(PtrVector *vec, size_t index, void *elem) {
+    if (!vec || !elem || index >= vec->capacity) return;
+
+    if (ptr_vec_is_full(vec)) {
+        ptr_vec_expand(vec);
     }
     if (index > vec->length) return;
 
@@ -66,28 +92,23 @@ void ptr_vector_insert(PtrVector *vec, size_t index, void *element, size_t eleme
         vec->elements[i] = vec->elements[i - 1];
     }
 
-    void *copy = malloc(element_size);
-    if (!copy) return;
-    memcpy(copy, element, element_size);
-    vec->elements[index] = copy;
-    vec->length++;
+    ptr_vec_set(vec, index, elem);
 }
 
-// Push element at the end
-void ptr_vector_push_back(PtrVector *vec, void *element, size_t element_size) {
-    if (ptr_vector_is_full(vec)) {
-        ptr_vector_expand(vec);
+void ptr_vec_push_back(PtrVector *vec, void *elem) {
+    if (!vec || !elem) return;
+    if (ptr_vec_is_full(vec)) {
+        ptr_vec_expand(vec);
     }
 
-    void *copy = malloc(element_size);
-    if (!copy) return;
-    memcpy(copy, element, element_size);
-    vec->elements[vec->length] = copy;
-    vec->length++;
+    ptr_vec_set(vec, vec->length, elem);
 }
 
+void ptr_vec_push_front(PtrVector *vec, void *element) {
+    ptr_vec_insert(vec, 0, element);
+}
 
-void *ptr_vector_at(PtrVector *vec, size_t index) {
+void *ptr_vec_at(PtrVector *vec, size_t index) {
     if (index >= vec->length) {
         return NULL;
     }
@@ -95,13 +116,10 @@ void *ptr_vector_at(PtrVector *vec, size_t index) {
     return vec->elements[index];
 }
 
-void ptr_vector_free(PtrVector *vec) {
+void ptr_vec_free(PtrVector *vec) {
     if (!vec) return;
 
     if (vec->elements != NULL) {
-        for (size_t i = 0; i < vec->length; i++) {
-            free(vec->elements[i]);
-        }
         free(vec->elements);
     }
     free(vec);
