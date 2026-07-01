@@ -13,7 +13,7 @@ typedef struct {
     PtrVector *headers;
 } HTTPRequest;
 
-HTTPRequest *http_request_new();
+HTTPRequest *http_request_new(void);
 void http_request_add_header(HTTPRequest *req, HTTPHeader *header);
 void http_request_free(HTTPRequest *req);
 

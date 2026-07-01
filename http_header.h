@@ -8,7 +8,7 @@ typedef struct {
 } HTTPHeader;
 
 
-HTTPHeader *http_header_new();
+HTTPHeader *http_header_new(void);
 void http_header_reset(HTTPHeader *header);
 void http_header_free(HTTPHeader *header);
 
