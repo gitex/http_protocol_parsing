@@ -203,6 +203,37 @@ TEST(test_is_empty) {
     ptr_vec_free(vec);
 }
 
+// ptr_vec_pop SHOULD return last element and remove it
+TEST(test_pop_return_last) {
+    PtrVector *vec = ptr_vec_new(4);
+
+    int xs[4] = {0, 1, 2, 3};
+    size_t n = COUNT_OF(xs);
+    fill_vector(xs, n, vec);
+    ASSERT_EQ_SIZE(n, ptr_vec_length(vec));
+
+    void *ptr = NULL;
+    for (size_t idx = n - 1; idx == 0; idx--) {
+        ptr = ptr_vec_pop_back(vec);
+        ASSERT_EQ_PTR(&xs[idx], ptr);
+        ASSERT_EQ_INT(xs[idx], *(int *)ptr);
+        ASSERT_EQ_SIZE(idx, ptr_vec_length(vec));
+    }
+
+    ptr_vec_free(vec);
+}
+
+// ptr_vec_pop SHOULD return NULL if vector is empty
+TEST(test_pop_on_empty_vec) {
+    PtrVector *vec = ptr_vec_new(4);
+    ASSERT_TRUE(ptr_vec_is_empty(vec));
+
+    void *ptr = ptr_vec_pop_back(vec);
+    ASSERT_NULL(ptr);
+
+    ptr_vec_free(vec);
+}
+
 
 int main() {
     RUN_TEST(test_init_with_zero_capacity);
@@ -218,6 +249,8 @@ int main() {
     RUN_TEST(test_insert_in_the_middle);
     RUN_TEST(test_insert_beyond_length);
     RUN_TEST(test_is_empty);
+    RUN_TEST(test_pop_return_last);
+    RUN_TEST(test_pop_on_empty_vec);
     TEST_SUMMARY();
 
     return tests_failed;

@@ -44,6 +44,9 @@ PtrVectorError ptr_vec_push_back(PtrVector *vec, void *elem);
 // Push element at the front (before first element)
 PtrVectorError ptr_vec_push_front(PtrVector *vec, void *elem);
 
+// Return last element and remove it
+void *ptr_vec_pop_back(PtrVector *vec);
+
 /* Get element at index */
 void *ptr_vec_at(PtrVector *vec, size_t index);
 

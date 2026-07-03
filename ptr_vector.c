@@ -135,7 +135,7 @@ PtrVectorError ptr_vec_push_back(PtrVector *vec, void *elem) {
 void *ptr_vec_last(PtrVector *vec) {
     if (!vec) { return NULL; }
 
-    return vec->elements[vec->length];
+    return vec->elements[vec->length - 1];
 }
 
 void *ptr_vec_pop_back(PtrVector *vec) {
@@ -150,7 +150,7 @@ void *ptr_vec_pop_back(PtrVector *vec) {
     // Maybe shrink it in 1/2 when it's 1/3 full?
     // Or shrink it 1/3? Seems useless. Seems like realloc just for realloc
 
-    vec->elements[vec->length] = NULL;  // Useless operation???
+    vec->elements[vec->length - 1] = NULL;  // Useless operation???
     vec->length--;
 
     return last;
