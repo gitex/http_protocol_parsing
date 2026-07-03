@@ -61,7 +61,7 @@ static int asserts_failed = 0;
 #define ASSERT_NULL(ptr)                                                                  \
     do {                                                                                  \
         if ((ptr) != NULL) {                                                              \
-            _TEST_FAILF("expected='%s' actual='%s'", (expected), (actual));               \
+            _TEST_FAILF("expected=NULL actual='%p'", (ptr));               \
         }                                                                                 \
     } while (0)
 
@@ -73,11 +73,25 @@ static int asserts_failed = 0;
     } while (0)
 
 
-#define ASSERT_NOT_NULL(ptr)                                                              \
+#define ASSERT_NOT_NULL(actual)                                                              \
     do {                                                                                  \
-        if ((ptr) == NULL) {                                                              \
+        if ((actual) == NULL) {                                                              \
             _TEST_FAIL("unexpected NULL");                                                \
         }                                                                                 \
+    } while (0)
+
+#define ASSERT_EQ_PTR(expected, actual)                                                  \
+    do {                                                                                 \
+        if ((actual) != (expected)) {                                                    \
+            _TEST_FAILF("expected=%p, actual=%p", (void*)(expected), (void*)(actual));                 \
+        }                                                                                \
+    } while (0)
+
+#define ASSERT_NOT_EQ_PTR(expected, actual)                                                  \
+    do {                                                                                 \
+        if ((actual) == (expected)) {                                                    \
+            _TEST_FAILF("expected=%p, actual=%p", (void*)(expected), (void*)(actual));                 \
+        }                                                                                \
     } while (0)
 
 #define ASSERT_TRUE(cond)                                                                 \
@@ -98,6 +112,9 @@ static int asserts_failed = 0;
 
 /* test runner */
 
+#define SETUP() void setup(void)
+#define TEARDOWN() void teardown(void)
+
 #define TEST(name) static void name(void)
 
 #define RUN_TEST(test)                                                                    \
@@ -110,6 +127,7 @@ static int asserts_failed = 0;
         }                                                                                 \
     } while (0)
 
+#define GROUP()
 
 #define TEST_SUMMARY()                                                                    \
     do {                                                                                  \

@@ -15,18 +15,18 @@ typedef struct PtrVector {
 
 
 PtrVector *ptr_vec_new(int capacity) {
-    if (capacity <= 0) {
-        capacity = DEFAULT_CAPACITY;
-    }
+    if (capacity <= 0) { capacity = DEFAULT_CAPACITY; }
 
     PtrVector *v = malloc(sizeof(PtrVector));
     if (!v) return NULL;
+    memset(v, 0, sizeof(PtrVector));
 
     v->capacity = capacity;
     v->length = 0;
     v->elements = malloc(v->capacity * sizeof(void *));
     if (!v->elements) { free(v); return NULL; }
 
+    memset(v->elements, 0, v->capacity * sizeof(void *));
     return v;
 }
 
@@ -43,84 +43,132 @@ bool ptr_vec_is_empty(PtrVector *vec) {
 }
 
 // Only for internal use??? Does it help with something outside?
-static bool ptr_vec_is_full(PtrVector *vec) {
+static bool _ptr_vector_is_full(PtrVector *vec) {
     return vec->length == vec->capacity;
 }
 
-// Next 3 functions reallocate vector with capacity. Do we need this control outside?
-// What if outside we decide to shrink, but there values in other side???
-// Maybe it's enough to create vector with capacity?
-static int realloc_with_capacity(PtrVector *vec, size_t capacity) {
-    void *tmp = realloc(vec->elements, capacity);
+static PtrVectorError _realloc_with_capacity(PtrVector *vec, size_t capacity) {
+    void *tmp = realloc(vec->elements, capacity * sizeof(void *));
     if (!tmp) {
         fprintf(stderr, "Cannot expand ptr_vec\n");
-        return 1;
+        return PTR_VEC_ERR__ALLOC;
     }
+
+    // TODO: do i need to free elements before assigning?
     vec->elements = tmp;
-    return 0;
+    vec->capacity = capacity;
+    return PTR_VEC_OK;
 }
 
-static void ptr_vec_expand(PtrVector *vec) {
-    realloc_with_capacity(vec, vec->capacity * CAPACITY_FACTOR);
+static PtrVectorError _ptr_vec_expand_capacity(PtrVector *vec) {
+    return _realloc_with_capacity(vec, vec->capacity * CAPACITY_FACTOR);
 }
 
-__attribute__((unused)) static void ptr_vec_shrink(PtrVector *vec) {
-    realloc_with_capacity(vec, vec->capacity /=CAPACITY_FACTOR);
+__attribute__((unused)) static PtrVectorError _ptr_vec_shrink_capacity(PtrVector *vec) {
+    return _realloc_with_capacity(vec, vec->capacity /=CAPACITY_FACTOR);
 }
 
-void ptr_vec_set(PtrVector *vec, size_t index, void *elem) {
-    if (!vec || !elem || index >= vec->capacity) return;
+// Set element in the range of capacity
+static PtrVectorError _ptr_vec_emplace_at(PtrVector *vec, size_t idx, void *elem) {
+    if (!vec || !elem )       { return PTR_VEC_ERR__NULLPTR; }
+    if (idx >= vec->capacity) { return PTR_VEC_ERR__CAPACITY_EXCEEDED; }
 
-    vec->elements[index] = elem;
+    vec->elements[idx] = elem;
 
-    if (index > vec->length) {
-        vec->length = index;
-    } else if (index == vec->length) {
+    if (idx > vec->length) {
+        vec->length = idx;
+    } else if (idx == vec->length) {
         vec->length++;
     }
+
+    return PTR_VEC_OK;
+
 }
 
-void ptr_vec_insert(PtrVector *vec, size_t index, void *elem) {
-    if (!vec || !elem || index >= vec->capacity) return;
+PtrVectorError ptr_vec_set(PtrVector *vec, size_t idx, void *elem) {
+    if (!vec || !elem ) { return PTR_VEC_ERR__NULLPTR; }
 
-    if (ptr_vec_is_full(vec)) {
-        ptr_vec_expand(vec);
-    }
-    if (index > vec->length) return;
 
-    for (size_t i = vec->length; i > index; --i) {
-        vec->elements[i] = vec->elements[i - 1];
+    if (ptr_vec_is_empty(vec) && idx > 0) {
+        return PTR_VEC_ERR__INDEX_NOT_ZERO_ON_EMPTY;
+    } else if (!ptr_vec_is_empty(vec) && idx >= vec->length)  {
+        return PTR_VEC_ERR__INDEX_OUT_OF_RANGE;
     }
 
-    ptr_vec_set(vec, index, elem);
+    return _ptr_vec_emplace_at(vec, idx, elem);
 }
 
-void ptr_vec_push_back(PtrVector *vec, void *elem) {
-    if (!vec || !elem) return;
-    if (ptr_vec_is_full(vec)) {
-        ptr_vec_expand(vec);
+PtrVectorError ptr_vec_insert(PtrVector *vec, size_t index, void *elem) {
+    if (!vec || !elem ) { return PTR_VEC_ERR__NULLPTR; }
+
+    if (!ptr_vec_is_empty(vec) && index > vec->length) {
+        return PTR_VEC_ERR__INDEX_OUT_OF_RANGE;
     }
 
-    ptr_vec_set(vec, vec->length, elem);
+    if (_ptr_vector_is_full(vec)) {
+        _ptr_vec_expand_capacity(vec);
+    }
+
+    if (index < vec->length) {
+        for (size_t i = vec->capacity; i > index; i--) {
+            vec->elements[i] = vec->elements[i - 1];
+        }
+        vec->elements[index] = NULL;
+        vec->length++;
+    }
+
+    // TODO: what are we doing if vector expanded but result is not OK?
+    return _ptr_vec_emplace_at(vec, index, elem);
 }
 
-void ptr_vec_push_front(PtrVector *vec, void *element) {
-    ptr_vec_insert(vec, 0, element);
+PtrVectorError ptr_vec_push_back(PtrVector *vec, void *elem) {
+    if (!vec || !elem ) return PTR_VEC_ERR__NULLPTR;
+
+    if (_ptr_vector_is_full(vec)) {
+        _ptr_vec_expand_capacity(vec);
+    }
+
+    // TODO: what are we doing if vector expanded but result is not OK?
+    return _ptr_vec_emplace_at(vec, vec->length, elem);
+}
+
+void *ptr_vec_last(PtrVector *vec) {
+    if (!vec) { return NULL; }
+
+    return vec->elements[vec->length];
+}
+
+void *ptr_vec_pop_back(PtrVector *vec) {
+    if (!vec)             { return NULL; }
+    if (vec->length == 0) { return NULL; }
+
+    void *last = ptr_vec_last(vec);
+
+    // TODO: Do we even want to shrink it?
+    // It does not seem optimal to shrink it to exact length
+    //     and then potentially expand it back later.
+    // Maybe shrink it in 1/2 when it's 1/3 full?
+    // Or shrink it 1/3? Seems useless. Seems like realloc just for realloc
+
+    vec->elements[vec->length] = NULL;  // Useless operation???
+    vec->length--;
+
+    return last;
 }
 
 void *ptr_vec_at(PtrVector *vec, size_t index) {
-    if (index >= vec->length) {
-        return NULL;
-    }
+    if (!vec)                 { return NULL; }
+    if (index >= vec->length) { return NULL; }
 
     return vec->elements[index];
 }
 
 void ptr_vec_free(PtrVector *vec) {
-    if (!vec) return;
+    if (!vec) { return; }
 
     if (vec->elements != NULL) {
         free(vec->elements);
+        // NOTE(Evgeniy) We don't own memory, that why we don't clean elements itself.
     }
     free(vec);
 }

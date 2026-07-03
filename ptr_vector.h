@@ -8,6 +8,15 @@
 #define DEFAULT_CAPACITY  2
 #define CAPACITY_FACTOR   2
 
+typedef enum {
+    PTR_VEC_OK = 0,
+    PTR_VEC_ERR__NULLPTR = 1,
+    PTR_VEC_ERR__ALLOC = 2,
+    PTR_VEC_ERR__INDEX_OUT_OF_RANGE = 3,
+    PTR_VEC_ERR__INDEX_NOT_ZERO_ON_EMPTY = 4,
+    PTR_VEC_ERR__CAPACITY_EXCEEDED = 5,
+} PtrVectorError;
+
 typedef struct PtrVector PtrVector;
 
 /* Create new vector with capacity. If capacity less or equal to zero,
@@ -24,16 +33,16 @@ size_t ptr_vec_capacity(PtrVector *vec);
 bool ptr_vec_is_empty(PtrVector *vec);
 
 // Replace element by index. Index cannot be greater then capacity
-void ptr_vec_set(PtrVector *vec, size_t index, void *elem);
+PtrVectorError ptr_vec_set(PtrVector *vec, size_t index, void *elem);
 
 // Expands vector at the index and inserts an element there. Index cannot be greater then capacity
-void ptr_vec_insert(PtrVector *vec, size_t index, void *elem);
+PtrVectorError ptr_vec_insert(PtrVector *vec, size_t index, void *elem);
 
 // Push element at the end (after last element)
-void ptr_vec_push_back(PtrVector *vec, void *elem);
+PtrVectorError ptr_vec_push_back(PtrVector *vec, void *elem);
 
 // Push element at the front (before first element)
-void ptr_vec_push_front(PtrVector *vec, void *elem);
+PtrVectorError ptr_vec_push_front(PtrVector *vec, void *elem);
 
 /* Get element at index */
 void *ptr_vec_at(PtrVector *vec, size_t index);
