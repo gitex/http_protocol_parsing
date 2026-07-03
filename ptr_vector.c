@@ -7,11 +7,11 @@
 #include "ptr_vector.h"
 
 
-typedef struct PtrVector {
+struct PtrVector {
     void **elements;
     size_t length;
     size_t capacity;
-} PtrVector;
+};
 
 
 PtrVector *ptr_vec_new(int capacity) {
