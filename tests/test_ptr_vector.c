@@ -23,6 +23,8 @@ void assert_int_array_eq(int xs[], size_t n, PtrVector* vec) {
 }
 
 
+/* !ptr_vec_new */
+
 // ptr_vec_new SHOULD allow to set capacity at initialization
 TEST(test_init_with_some_capacity) {
     PtrVector *vec = ptr_vec_new(4);
@@ -41,12 +43,18 @@ TEST(test_init_with_zero_capacity) {
     ptr_vec_free(vec);
 }
 
+
+/* !ptr_vec_length */
+
 // ptr_vec_length SHOULD return current length of the vector
 TEST(test_length) {
     PtrVector *vec = ptr_vec_new(0);
     ASSERT_EQ_SIZE((size_t) 0, ptr_vec_length(vec));
     ptr_vec_free(vec);
 }
+
+
+/* !ptr_vec_capacity */
 
 // ptr_vec_capacity SHOULD return current capacity of the vector
 TEST(test_capacity) {
@@ -55,7 +63,23 @@ TEST(test_capacity) {
     ptr_vec_free(vec);
 }
 
-/* --- set --- */
+
+/* !ptr_vec_is_empty */
+
+// ptr_vec_is_empty SHOULD return true if vector is empty, otherwise - false
+TEST(test_is_empty) {
+    PtrVector *vec = ptr_vec_new(4);
+    ASSERT_TRUE(ptr_vec_is_empty(vec));
+
+    char *tmp = "test";
+    ptr_vec_push_back(vec, tmp);
+    ASSERT_FALSE(ptr_vec_is_empty(vec));
+
+    ptr_vec_free(vec);
+}
+
+
+/* !ptr_vec_set */
 
 // ptr_vec_set SHOULD be able to place element at index zero
 TEST(test_set_at_begining) {
@@ -116,7 +140,7 @@ TEST(test_set_beyond_bounds_on_empty_vec) {
     ptr_vec_free(vec);
 }
 
-/* --- push_back --- */
+/* !ptr_vec_push_back */
 
 // ptr_vec_push_back SHOULD add elements at last index
 TEST(test_push_back) {
@@ -136,7 +160,8 @@ TEST(test_push_back) {
 }
 
 
-/* --- insert --- */
+
+/* !ptr_vec_insert  */
 
 // ptr_vec_insert SHOULD be able to place element at zero index
 // ptr_vec_insert SHOULD be able to append element at vec->length index (push_back)
@@ -177,6 +202,23 @@ TEST(test_insert_in_the_middle) {
     ptr_vec_free(vec);
 }
 
+// ptr_vec_insert SHOULD emplace element at front and move
+//      other elements one position to the right.
+TEST(test_insert_in_the_front) {
+    PtrVector *vec = ptr_vec_new(4);
+
+    int xs[4] = {0, 1, 2, 3};
+    fill_vector(xs, COUNT_OF(xs), vec);
+
+    int x = 10;
+    ASSERT_EQ_INT(PTR_VEC_OK, ptr_vec_insert(vec, 0, &x));
+
+    int exp[5] = {10, 0, 1, 2, 3};
+    assert_int_array_eq(exp, COUNT_OF(exp), vec);
+
+    ptr_vec_free(vec);
+}
+
 // ptr_vec_insert SHOULD NOT emplace elements out of the range of vector
 TEST(test_insert_beyond_length) {
     PtrVector *vec = ptr_vec_new(8);
@@ -191,17 +233,27 @@ TEST(test_insert_beyond_length) {
     assert_int_array_eq(xs, COUNT_OF(xs), vec);
 }
 
-// ptr_vec_is_empty SHOULD return true if vector is empty, otherwise - false
-TEST(test_is_empty) {
-    PtrVector *vec = ptr_vec_new(4);
-    ASSERT_TRUE(ptr_vec_is_empty(vec));
+/* !ptr_vec_push_front */
 
-    char *tmp = "test";
-    ptr_vec_push_back(vec, tmp);
-    ASSERT_FALSE(ptr_vec_is_empty(vec));
+// ptr_vec_push_front SHOULD emplace element at index zero and
+//      move all elements one position to the right.
+TEST(test_push_front) {
+    PtrVector *vec = ptr_vec_new(4);
+
+    int xs[4] = {0, 1, 2, 3};
+    fill_vector(xs, COUNT_OF(xs), vec);
+
+    int x = 10;
+    ASSERT_EQ_INT(PTR_VEC_OK, ptr_vec_push_front(vec, &x));
+
+    int exp[5] = {10, 0, 1, 2, 3};
+    assert_int_array_eq(exp, COUNT_OF(exp), vec);
 
     ptr_vec_free(vec);
 }
+
+
+/* !ptr_vec_pop */
 
 // ptr_vec_pop SHOULD return last element and remove it
 TEST(test_pop_return_last) {
@@ -213,14 +265,33 @@ TEST(test_pop_return_last) {
     ASSERT_EQ_SIZE(n, ptr_vec_length(vec));
 
     void *ptr = NULL;
-    for (size_t idx = n - 1; idx == 0; idx--) {
+    for (size_t idx = n; idx-- > 0; ) {
         ptr = ptr_vec_pop_back(vec);
         ASSERT_EQ_PTR(&xs[idx], ptr);
         ASSERT_EQ_INT(xs[idx], *(int *)ptr);
         ASSERT_EQ_SIZE(idx, ptr_vec_length(vec));
     }
+    ASSERT_EQ_SIZE((size_t)0, ptr_vec_length(vec));
 
     ptr_vec_free(vec);
+}
+
+/* !ptr_vec_last */
+
+// ptr_vec_last SHOULD return last element
+// ptr_vec_last SHOULD return NULL on empty vector
+TEST(test_last_return_last) {
+    PtrVector *vec = ptr_vec_new(4);
+
+    ASSERT_NULL(ptr_vec_last(vec));
+
+    int x = 20;
+    ASSERT_EQ_INT(PTR_VEC_OK, ptr_vec_push_back(vec, &x));
+    ASSERT_EQ_PTR(&x, ptr_vec_last(vec));
+
+    int y = 30;
+    ASSERT_EQ_INT(PTR_VEC_OK, ptr_vec_push_back(vec, &y));
+    ASSERT_EQ_PTR(&y, ptr_vec_last(vec));
 }
 
 // ptr_vec_pop SHOULD return NULL if vector is empty
