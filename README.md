@@ -3,9 +3,9 @@
 ## Goals
 
 - Check State Machine design
-- Make vector myself
-- Make test runner myself and add pretty output to it (at least something!)
-- Check HTTP protocol (it's kinda old, but principles still interesting)
+- Make vector myself (Pointer Vector `PtrVector`)
+- Make test runner myself and add some pretty output to it
+- Check HTTP 1.0 protocol (it's kinda old, but principles still interesting)
 
 ## Build
 
