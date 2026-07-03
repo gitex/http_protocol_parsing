@@ -1,8 +1,10 @@
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef TEST_H
+#define TEST_H
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#define MAX_TESTS 1024
 
 static int tests_run = 0;
 static int tests_passed = 0;
@@ -27,38 +29,39 @@ typedef struct {
     void (*fn)(void);
 } TestFn;
 
-static TestFn tests[1024];
+static TestFn tests[MAX_TESTS];
 static size_t tests_count = 0;
 
 
 #define _TEST_RUN(test)                                                                   \
-    tests_run++;                                                                          \
-    fprintf(stdout, "%s %s\n", RUN_PREFIX, (test));                                                  \
+    do { \
+        tests_run++;                                                                          \
+        fprintf(stdout, "%s %s\n", RUN_PREFIX, (test));                                                  \
+    } while (0)
 
 #define _TEST_FAIL(msg)                                                                   \
-    tests_failed++;                                                                       \
-    asserts_failed++;                                                                     \
-    fprintf(stderr, "%s %s:%d: %s\n", FAIL_PREFIX, __FILE__, __LINE__, msg);                                      \
-    return;                                                                               \
+    do { \
+        tests_failed++;                                                                       \
+        asserts_failed++;                                                                     \
+        fprintf(stderr, "%s %s:%d: %s\n", FAIL_PREFIX, __FILE__, __LINE__, msg);                                      \
+    } while (0)
 
 
 #define _TEST_FAILF(msg, ...)                                                             \
-    tests_failed++;                                                                       \
-    asserts_failed++;                                                                     \
-    fprintf(stderr, "%s %s:%d: ", FAIL_PREFIX, __FILE__, __LINE__);                       \
-    fprintf(stderr, msg "\n", __VA_ARGS__);                                               \
-    return;                                                                               \
+    do { \
+        tests_failed++;                                                                       \
+        asserts_failed++;                                                                     \
+        fprintf(stderr, "%s %s:%d: ", FAIL_PREFIX, __FILE__, __LINE__);                       \
+        fprintf(stderr, msg "\n", __VA_ARGS__);                                               \
+    } while (0)
 
 #define _TEST_PASS(test)                                                                     \
-    tests_passed++;                                                                       \
-    fprintf(stdout, "%s %s\n", PASS_PREFIX, (test));                                                           \
+    do { \
+        tests_passed++;                                                                       \
+        fprintf(stdout, "%s %s\n", PASS_PREFIX, (test));                                                           \
+    } while (0)
 
-#define ASSERT_EQ_STR(expected, actual)                                                      \
-    do {                                                                                  \
-        if ((expected) != (actual)) {                                                        \
-            _TEST_FAILF("expected=%s actual=%s", (expected), (actual));                   \
-        }                                                                                 \
-    } while (0)                                                                           \
+/* !asserts */
 
 #define ASSERT_EQ_INT(expected, actual)                                                   \
     do {                                                                                  \
@@ -77,7 +80,7 @@ static size_t tests_count = 0;
 #define ASSERT_EQ_SIZE(expected, actual)                                                  \
     do {                                                                                  \
         if ((expected) != (actual)) {                                                     \
-            _TEST_FAILF("expected=%ld actual=%ld", (expected), (actual));                 \
+            _TEST_FAILF("expected=%zu actual=%zu", (expected), (actual));                 \
         }                                                                                 \
     } while (0)
 
@@ -124,12 +127,16 @@ static size_t tests_count = 0;
 #define SETUP() void setup(void)
 #define TEARDOWN() void teardown(void)
 
-#define TEST(test_name) \
-    __attribute__((unused)) static void test_name(void); \
-    __attribute__((constructor)) \
-    static void register_##test_name(void) { \
-        tests[tests_count++] = (TestFn){.name = #test_name, .fn = test_name}; \
-    } \
+#define TEST(test_name)                                                                  \
+    __attribute__((unused)) static void test_name(void);                                 \
+    __attribute__((constructor))                                                         \
+    static void register_##test_name(void) {                                             \
+        if (tests_count >= MAX_TESTS) {                                                  \
+            fprintf(stderr, "Exceeded limit of tests (max %d)\n", MAX_TESTS);            \
+            abort();                                                                     \
+        }                                                                                \
+        tests[tests_count++] = (TestFn){.name = #test_name, .fn = test_name};            \
+    }                                                                                    \
     static void test_name(void)
 
 
@@ -176,4 +183,4 @@ static size_t tests_count = 0;
         }                                                                                 \
     } while (0)
 
-#endif
+#endif  // !TEST_H
