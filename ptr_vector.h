@@ -21,7 +21,7 @@ typedef struct PtrVector PtrVector;
 
 /* Create new vector with capacity. If capacity less or equal to zero,
  * then it will use default capacity (2) */
-PtrVector *ptr_vec_new(int capacity);
+PtrVector *ptr_vec_new(size_t capacity);
 
 /* Get length of the vector */
 size_t ptr_vec_length(PtrVector *vec);
@@ -43,6 +43,9 @@ PtrVectorError ptr_vec_push_back(PtrVector *vec, void *elem);
 
 // Push element at the front (before first element)
 PtrVectorError ptr_vec_push_front(PtrVector *vec, void *elem);
+
+// Return last element in the vector
+void *ptr_vec_last(PtrVector *vec);
 
 // Return last element and remove it
 void *ptr_vec_pop_back(PtrVector *vec);

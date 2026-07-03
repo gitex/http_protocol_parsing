@@ -14,19 +14,17 @@ struct PtrVector {
 };
 
 
-PtrVector *ptr_vec_new(int capacity) {
-    if (capacity <= 0) { capacity = DEFAULT_CAPACITY; }
+PtrVector *ptr_vec_new(size_t capacity) {
+    if (capacity == 0) { capacity = DEFAULT_CAPACITY; }
 
-    PtrVector *v = malloc(sizeof(PtrVector));
+    PtrVector *v = calloc(1, sizeof(PtrVector));
     if (!v) return NULL;
-    memset(v, 0, sizeof(PtrVector));
 
     v->capacity = capacity;
     v->length = 0;
-    v->elements = malloc(v->capacity * sizeof(void *));
+    v->elements = calloc(v->capacity, sizeof(void *));
     if (!v->elements) { free(v); return NULL; }
 
-    memset(v->elements, 0, v->capacity * sizeof(void *));
     return v;
 }
 
@@ -65,19 +63,18 @@ static PtrVectorError _ptr_vec_expand_capacity(PtrVector *vec) {
 }
 
 __attribute__((unused)) static PtrVectorError _ptr_vec_shrink_capacity(PtrVector *vec) {
-    return _realloc_with_capacity(vec, vec->capacity /=CAPACITY_FACTOR);
+    return _realloc_with_capacity(vec, vec->capacity / CAPACITY_FACTOR);
 }
 
 // Set element in the range of capacity
 static PtrVectorError _ptr_vec_emplace_at(PtrVector *vec, size_t idx, void *elem) {
     if (!vec || !elem )       { return PTR_VEC_ERR__NULLPTR; }
     if (idx >= vec->capacity) { return PTR_VEC_ERR__CAPACITY_EXCEEDED; }
+    if (idx > vec->length)    { return PTR_VEC_ERR__INDEX_OUT_OF_RANGE; }
 
     vec->elements[idx] = elem;
 
-    if (idx > vec->length) {
-        vec->length = idx;
-    } else if (idx == vec->length) {
+    if (idx == vec->length) {
         vec->length++;
     }
 
@@ -106,11 +103,12 @@ PtrVectorError ptr_vec_insert(PtrVector *vec, size_t index, void *elem) {
     }
 
     if (_ptr_vector_is_full(vec)) {
-        _ptr_vec_expand_capacity(vec);
+        PtrVectorError err = _ptr_vec_expand_capacity(vec);
+        if (err != PTR_VEC_OK) { return err; }
     }
 
     if (index < vec->length) {
-        for (size_t i = vec->capacity; i > index; i--) {
+        for (size_t i = vec->length; i > index; i--) {
             vec->elements[i] = vec->elements[i - 1];
         }
         vec->elements[index] = NULL;
@@ -125,15 +123,20 @@ PtrVectorError ptr_vec_push_back(PtrVector *vec, void *elem) {
     if (!vec || !elem ) return PTR_VEC_ERR__NULLPTR;
 
     if (_ptr_vector_is_full(vec)) {
-        _ptr_vec_expand_capacity(vec);
+        PtrVectorError err = _ptr_vec_expand_capacity(vec);
+        if (err != PTR_VEC_OK) { return err; }
     }
 
     // TODO: what are we doing if vector expanded but result is not OK?
     return _ptr_vec_emplace_at(vec, vec->length, elem);
 }
 
+PtrVectorError ptr_vec_push_front(PtrVector *vec, void *elem) {
+    return ptr_vec_insert(vec, 0, elem);
+}
+
 void *ptr_vec_last(PtrVector *vec) {
-    if (!vec) { return NULL; }
+    if (!vec || vec->length == 0) { return NULL; }
 
     return vec->elements[vec->length - 1];
 }
