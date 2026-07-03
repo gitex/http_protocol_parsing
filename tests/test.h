@@ -22,9 +22,18 @@ static int asserts_failed = 0;
 #define PASS_PREFIX COLOR_TEXT("  [PASS]", ANSI_COLOR_GREEN)
 
 
+typedef struct {
+    const char *name;
+    void (*fn)(void);
+} TestFn;
+
+static TestFn tests[1024];
+static size_t tests_count = 0;
+
+
 #define _TEST_RUN(test)                                                                   \
     tests_run++;                                                                          \
-    printf("%s %s\n", RUN_PREFIX, #test)                                                  \
+    fprintf(stdout, "%s %s\n", RUN_PREFIX, (test));                                                  \
 
 #define _TEST_FAIL(msg)                                                                   \
     tests_failed++;                                                                       \
@@ -115,19 +124,44 @@ static int asserts_failed = 0;
 #define SETUP() void setup(void)
 #define TEARDOWN() void teardown(void)
 
-#define TEST(name) static void name(void)
+#define TEST(test_name) \
+    __attribute__((unused)) static void test_name(void); \
+    __attribute__((constructor)) \
+    static void register_##test_name(void) { \
+        tests[tests_count++] = (TestFn){.name = #test_name, .fn = test_name}; \
+    } \
+    static void test_name(void)
+
 
 #define RUN_TEST(test)                                                                    \
     do {                                                                                  \
         asserts_failed = 0;                                                               \
-        _TEST_RUN(test);                                                                  \
+        _TEST_RUN(#test);                                                                  \
         test();                                                                           \
         if (asserts_failed == 0) {                                                        \
             _TEST_PASS(#test);                                                                \
+        }                                                                            \
+    } while (0)
+
+#define _RUN_TEST_FN_STRUCT(test)                                                                    \
+    do {                                                                                  \
+        asserts_failed = 0;                                                               \
+        _TEST_RUN(test.name);                                                                  \
+        test.fn();                                                                           \
+        if (asserts_failed == 0) {                                                        \
+            _TEST_PASS(test.name);                                                                \
         }                                                                                 \
     } while (0)
 
-#define GROUP()
+#define RUN_TESTS() \
+    do { \
+        for (size_t i = 0; i < tests_count; i++) { \
+            if (tests_count > 0) { \
+                _RUN_TEST_FN_STRUCT(tests[i]); \
+            } \
+        } \
+    } while (0)
+
 
 #define TEST_SUMMARY()                                                                    \
     do {                                                                                  \

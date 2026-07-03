@@ -236,22 +236,7 @@ TEST(test_pop_on_empty_vec) {
 
 
 int main() {
-    RUN_TEST(test_init_with_zero_capacity);
-    RUN_TEST(test_init_with_some_capacity);
-    RUN_TEST(test_length);
-    RUN_TEST(test_capacity);
-    RUN_TEST(test_set_at_begining);
-    RUN_TEST(test_set_as_replace);
-    RUN_TEST(test_set_beyond_bounds);
-    RUN_TEST(test_set_beyond_bounds_on_empty_vec);
-    RUN_TEST(test_push_back);
-    RUN_TEST(test_insert_as_push_back);
-    RUN_TEST(test_insert_in_the_middle);
-    RUN_TEST(test_insert_beyond_length);
-    RUN_TEST(test_is_empty);
-    RUN_TEST(test_pop_return_last);
-    RUN_TEST(test_pop_on_empty_vec);
+    RUN_TESTS();
     TEST_SUMMARY();
-
     return tests_failed;
 }
